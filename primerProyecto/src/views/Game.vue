@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import type { GameRecord } from '../models/GameRecord'
+import { GameRecordService } from '../services/GameRecordService'
+import { GameStateService } from '../services/GameStateService'
+import { StorageType } from '../factories/StorageFactory'
 
 interface Question {
   question: string
@@ -16,12 +20,9 @@ interface GameQuestion {
   feedback: string
 }
 
-interface GameRecord {
-  score: number
-  maxScore: number
-  date: string
-  questionsAnswered: number
-}
+// Instanciar servicios usando el patrón AbstractFactory
+const gameRecordService = new GameRecordService(StorageType.LOCAL)
+const gameStateService = new GameStateService(StorageType.LOCAL)
 
 const router = useRouter()
 const TIMER_DURATION = 12 // segundos por pregunta
@@ -41,111 +42,111 @@ const QUESTIONS_PER_GAME = 10
 const questions: Question[] = [
   {
     question: '¿Cuántas veces al día debe comer un perro adulto?',
-    options: ['1 vez', '2 veces', '4 veces', 'Cuando quiera'],
+    options: ['1 vez al día', '2 veces al día', '3 veces al día', '4 veces al día'],
     correct: 1,
     feedback: '✓ Los perros adultos comen bien con 2 comidas diarias',
   },
   {
     question: '¿Cuál es la temperatura corporal normal de un gato?',
-    options: ['36-37°C', '37-38.5°C', '38.5-39.5°C', '40°C o más'],
+    options: ['36.5-37.5°C', '37.5-38.5°C', '38-39.5°C', '39.5-40.5°C'],
     correct: 2,
-    feedback: '✓ Los gatos tienen temperatura más alta que los humanos',
+    feedback: '✓ Los gatos tienen temperatura más alta que los humanos (38-39.5°C)',
   },
   {
     question: '¿Cada cuánto tiempo se debe bañar a un perro?',
-    options: ['Cada semana', 'Cada 2 semanas', 'Cada mes o según sea necesario', 'Nunca'],
+    options: ['Cada semana sin falta', 'Cada 2-3 semanas', 'Cada 1-2 meses o según necesidad', 'Solo cuando esté muy sucio'],
     correct: 2,
     feedback: '✓ Bañar muy seguido puede dañar la piel del perro',
   },
   {
     question: '¿Cuál es el mejor tipo de juguete para un gato?',
-    options: ['Pelotas grandes', 'Juguetes con movimiento', 'Palos de madera', 'Plásticos duros'],
+    options: ['Pelotas pequeñas de goma', 'Juguetes que imitan presas con movimiento', 'Cuerdas estáticas colgantes', 'Cajas de cartón vacías'],
     correct: 1,
-    feedback: '✓ A los gatos les encanta perseguir cosas que se mueven',
+    feedback: '✓ A los gatos les encanta perseguir cosas que imitan presas',
   },
   {
     question: '¿Con qué frecuencia se deben cepillar los dientes de una mascota?',
-    options: ['Mensualmente', 'Semanalmente', 'Diariamente o 3-4 veces por semana', 'Nunca'],
+    options: ['1-2 veces por semana', '2-3 veces por semana', '3-4 veces por semana o diario', 'Una vez al mes'],
     correct: 2,
-    feedback: '✓ La higiene dental es crucial para la salud de la mascota',
+    feedback: '✓ La higiene dental es crucial: idealmente diario o 3-4 veces/semana',
   },
   {
     question: '¿Cuántas horas duerme un gato al día aproximadamente?',
-    options: ['8 horas', '12 horas', '16 horas', '20 horas'],
+    options: ['10-12 horas', '12-14 horas', '14-16 horas', '18-20 horas'],
     correct: 2,
-    feedback: '✓ Los gatos duermen mucho, es completamente normal',
+    feedback: '✓ Los gatos duermen 14-16 horas al día, es completamente normal',
   },
   {
     question: '¿Cuál es la mejor edad para vacunar a un cachorro?',
-    options: ['A las 2 semanas', 'A las 6-8 semanas', 'A los 6 meses', 'Al año'],
+    options: ['A las 4-5 semanas', 'A las 6-8 semanas', 'A las 10-12 semanas', 'A las 16 semanas'],
     correct: 1,
     feedback: '✓ Las vacunas comienzan entre las 6-8 semanas de vida',
   },
   {
     question: '¿Qué alimento es tóxico para los perros?',
-    options: ['Pollo', 'Chocolate', 'Arroz', 'Manzana'],
-    correct: 1,
-    feedback: '✓ El chocolate es tóxico para los perros, evítalo siempre',
+    options: ['Chocolate, uvas y cebolla', 'Pollo, arroz y zanahoria', 'Manzana, pera y sandía', 'Carne, pescado y huevos'],
+    correct: 0,
+    feedback: '✓ Chocolate, uvas, cebolla y ajo son tóxicos para perros',
   },
   {
-    question: '¿Cuántas glándulas sudoríparas tiene un gato en las patas?',
-    options: ['5 glándulas', '10 glándulas', '17 glándulas', 'No tiene'],
+    question: '¿Dónde sudan principalmente los gatos?',
+    options: ['Por todo el cuerpo como humanos', 'A través de la lengua al jadear', 'Por las almohadillas de las patas', 'No sudan, solo jadean'],
     correct: 2,
-    feedback: '✓ Los gatos tienen glándulas sudoríparas solo en las patas',
+    feedback: '✓ Los gatos sudan principalmente por las almohadillas de las patas',
   },
   {
     question: '¿Cuál es la esperanza de vida promedio de un perro?',
-    options: ['5-7 años', '10-13 años', '15-18 años', '20+ años'],
+    options: ['8-10 años', '10-13 años', '13-16 años', '16-20 años'],
     correct: 1,
-    feedback: '✓ La mayoría de perros viven entre 10-13 años',
+    feedback: '✓ La mayoría de perros viven entre 10-13 años (varía por raza)',
   },
   {
     question: '¿Por qué es importante desparasitar a las mascotas?',
-    options: ['Mejora el pelaje', 'Previene parásitos internos y externos', 'Hace que coman más', 'No es necesario'],
+    options: ['Solo mejora el aspecto del pelaje', 'Previene parásitos que afectan salud y pueden transmitirse', 'Solo es necesario si salen a la calle', 'Aumenta el apetito solamente'],
     correct: 1,
-    feedback: '✓ La desparasitación previene problemas digestivos y transmisiones a humanos',
+    feedback: '✓ La desparasitación previene problemas digestivos y zoonosis',
   },
   {
     question: '¿Qué signo puede indicar que un gato está estresado?',
-    options: ['Aumento de apetito', 'Aseo excesivo o pérdida de apetito', 'Dormir más', 'Aumento de peso'],
-    correct: 1,
-    feedback: '✓ El aseo excesivo o pérdida de apetito son señales de estrés',
+    options: ['Jugar más de lo normal con juguetes', 'Dormir 16 horas al día (lo normal)', 'Aseo excesivo, pérdida de apetito o aislamiento', 'Ronronear constantemente'],
+    correct: 2,
+    feedback: '✓ El aseo excesivo, anorexia y aislamiento son señales de estrés',
   },
   {
     question: '¿Qué debe incluir una dieta equilibrada para perros?',
-    options: ['Sólo carbohidratos', 'Proteínas, grasas, vitaminas y minerales', 'Sólo verduras', 'Sólo frutas'],
+    options: ['Solo proteínas de alta calidad', 'Proteínas, grasas, carbohidratos, vitaminas y minerales', 'Principalmente cereales y vegetales', 'Proteínas y grasas únicamente'],
     correct: 1,
-    feedback: '✓ Una dieta equilibrada contiene proteínas, grasas y micronutrientes',
+    feedback: '✓ Una dieta completa necesita macro y micronutrientes balanceados',
   },
   {
     question: '¿Cuál es una señal de problemas dentales en mascotas?',
-    options: ['Aliento fuerte, sangrado de encías', 'Aumento de energía', 'Dormir más', 'Apetito normal'],
+    options: ['Mal aliento persistente y encías inflamadas', 'Mayor energía y apetito voraz', 'Dormir más horas de lo habitual', 'Beber más agua que antes'],
     correct: 0,
-    feedback: '✓ El mal aliento y el sangrado indican problemas dentales',
+    feedback: '✓ Halitosis y gingivitis indican problemas dentales serios',
   },
   {
     question: '¿Cada cuánto revisar las orejas de un perro?',
-    options: ['Nunca', 'Cada día', 'Cada semana o según necesidad', 'Sólo en veterinario'],
+    options: ['Cada día sin falta', 'Cada 3-4 días', 'Cada semana o cuando notes algo extraño', 'Solo cuando huela mal'],
     correct: 2,
-    feedback: '✓ Revisarlas regularmente ayuda a detectar infecciones a tiempo',
+    feedback: '✓ Revisar semanalmente ayuda a detectar infecciones temprano',
   },
   {
-    question: '¿Qué tipo de alimento no debe darse a gatos?',
-    options: ['Alimento para gatos', 'Leche de vaca en exceso', 'Comida húmeda para gatos', 'Pienso equilibrado'],
+    question: '¿Qué tipo de alimento no debe darse a gatos adultos?',
+    options: ['Alimento seco premium para gatos', 'Leche de vaca en grandes cantidades', 'Comida húmeda especial para gatos', 'Leche deslactosada para gatos'],
     correct: 1,
-    feedback: '✓ Muchos gatos son intolerantes a la lactosa',
+    feedback: '✓ La mayoría de gatos adultos son intolerantes a la lactosa',
   },
   {
-    question: '¿Qué es la esterilización?',
-    options: ['Un juguete', 'Una cirugía para evitar reproducción', 'Una vacuna', 'Un alimento especial'],
+    question: '¿Qué es la esterilización/castración?',
+    options: ['Un tipo de vacuna anticonceptiva', 'Cirugía para evitar reproducción y controlar población', 'Un tratamiento hormonal temporal', 'Una dieta especial para control de peso'],
     correct: 1,
-    feedback: '✓ La esterilización evita camadas no deseadas y puede mejorar la salud',
+    feedback: '✓ Es una cirugía que previene camadas y mejora comportamiento',
   },
   {
-    question: '¿Cómo saber si un perro necesita agua?',
-    options: ['Siempre está activo', 'Encías secas y letargo', 'Ladra más', 'Come más'],
+    question: '¿Cómo saber si un perro necesita agua urgentemente?',
+    options: ['Ladra más de lo normal', 'Encías secas, letargo y elasticidad de piel reducida', 'Come menos de lo habitual', 'Juega más activamente'],
     correct: 1,
-    feedback: '✓ Encías secas y letargo sugieren deshidratación',
+    feedback: '✓ Encías secas y letargo son signos claros de deshidratación',
   },
   {
     question: '¿Qué medida previene pulgas y garrapatas?',
@@ -155,147 +156,147 @@ const questions: Question[] = [
   },
   {
     question: '¿Qué hacer si tu mascota come chocolate?',
-    options: ['No hacer nada', 'Observar al perro', 'Contactar inmediatamente al veterinario', 'Darle agua'],
+    options: ['Observar por 24 horas si hay síntomas', 'Darle leche para neutralizar la toxina', 'Contactar al veterinario inmediatamente', 'Inducir vómito sin consultar primero'],
     correct: 2,
-    feedback: '✓ El chocolate es tóxico; necesita atención veterinaria urgente',
+    feedback: '✓ El chocolate es tóxico; requiere atención veterinaria urgente',
   },
   {
     question: '¿Cuál es el mejor lugar para que un gato haga sus necesidades?',
-    options: ['Caja de arena limpia', 'Cocina', 'Cama', 'En la calle'],
+    options: ['Caja de arena limpia en lugar tranquilo', 'Patio con tierra o césped', 'Baño con la puerta cerrada', 'Cualquier rincón oscuro de la casa'],
     correct: 0,
-    feedback: '✓ Una caja de arena limpia y accesible es esencial para gatos',
+    feedback: '✓ Una caja de arena limpia y accesible en lugar tranquilo es esencial',
   },
   {
     question: '¿Cómo reducir el riesgo de obesidad en mascotas?',
-    options: ['Ejercicio + dieta controlada', 'Dar más premios', 'Dejar comida siempre disponible', 'No hacer nada'],
-    correct: 0,
-    feedback: '✓ Control de raciones y ejercicio son clave para evitar obesidad',
+    options: ['Reducir solo las raciones de comida', 'Ejercicio regular combinado con dieta controlada', 'Cambiar a alimento light sin modificar porciones', 'Dar más juguetes para entretenimiento'],
+    correct: 1,
+    feedback: '✓ La combinación de ejercicio y control de raciones es clave',
   },
   {
     question: '¿Qué edad suelen considerar "adulto" a un perro grande?',
-    options: ['6 meses', '1 año', '1.5-2 años dependiendo de la raza', '10 años'],
+    options: ['9-12 meses', '12-18 meses', '18-24 meses dependiendo de la raza', '24-36 meses'],
     correct: 2,
-    feedback: '✓ Razas grandes maduran más despacio que razas pequeñas',
+    feedback: '✓ Razas grandes maduran más despacio, entre 18-24 meses',
   },
   {
     question: '¿Qué signo indica que tu perro tiene molestias en el oído?',
-    options: ['Come muy rápido', 'Sacude la cabeza o se rasca constantemente', 'Corre más', 'Duerme mejor'],
+    options: ['Inclina la cabeza hacia un lado', 'Sacude la cabeza frecuentemente y se rasca la oreja', 'Camina en círculos constantemente', 'Ladra más de lo normal'],
     correct: 1,
-    feedback: '✓ Sacudidas de cabeza constantes indican posible infección',
+    feedback: '✓ Sacudidas frecuentes y rascado indican infección de oído',
   },
   {
     question: '¿Qué hacer si tu gato no come durante 24 horas?',
-    options: ['Esperar otro día', 'Es normal, no preocuparse', 'Contactar al veterinario', 'Darle comida diferente'],
+    options: ['Esperar 48 horas más antes de preocuparse', 'Ofrecerle comida húmeda más apetitosa', 'Contactar al veterinario para evaluación', 'Cambiar completamente su marca de alimento'],
     correct: 2,
-    feedback: '✓ La pérdida de apetito prolongada requiere revisión veterinaria',
+    feedback: '✓ Anorexia por 24h en gatos puede ser seria, requiere valoración',
   },
   {
     question: '¿Cuál es la causa común de vómitos en perros?',
-    options: ['El perro está asustado', 'Cambio rápido de alimento o comida en mal estado', 'Dormir boca abajo', 'El perro está feliz'],
+    options: ['Comer pasto del jardín', 'Cambio brusco de alimento o comida en mal estado', 'Hacer ejercicio después de comer', 'Tomar agua fría rápidamente'],
     correct: 1,
-    feedback: '✓ Cambios de dieta y comida en mal estado causan vómitos frecuentes',
+    feedback: '✓ Cambios dietéticos bruscos y comida descompuesta causan vómitos',
   },
   {
     question: '¿Cómo saber si tu gato tiene pulgas?',
-    options: ['Por el color del pelaje', 'Rasquiña constante, "caspa negra" en la piel', 'Porque maúlla mucho', 'Porque come menos'],
+    options: ['Pelaje opaco y seco al tacto', 'Rascado intenso y pequeños puntos negros (heces de pulgas)', 'Aumento de apetito y sed', 'Mauýlla más de lo normal'],
     correct: 1,
-    feedback: '✓ Rascado intenso y pequeñas manchas negras indican pulgas',
+    feedback: '✓ Prurito intenso y "caspa negra" (heces) son signos de pulgas',
   },
   {
     question: '¿Qué hacer si tu perro mastica sus propias patas?',
-    options: ['Dejarlo, es normal', 'Revisar si hay heridas, infección o alergias', 'Regañarlo', 'Ignorar completamente'],
+    options: ['Ponerle zapatos o botines protectores', 'Revisar alergias, hongos, heridas o ansiedad', 'Aplicar repelente amargo en las patas', 'Distraerlo con más juguetes'],
     correct: 1,
-    feedback: '✓ Masticarse las patas indica problemas de piel, alergias o estrés',
+    feedback: '✓ Masticarse las patas indica alergias, dermatitis o estrés',
   },
   {
     question: '¿Cuál es un signo de que tu gato está enfermo?',
-    options: ['Juega demasiado', 'Cambios en el comportamiento, aislamiento o vómitos', 'Tiene hambre', 'Duerme más de lo normal (únicamente)'],
+    options: ['Duerme en lugares diferentes de lo habitual', 'Cambios de comportamiento, aislamiento o vómitos frecuentes', 'Mauýlla al ver su comida favorita', 'Juega menos por las tardes'],
     correct: 1,
-    feedback: '✓ Cambios de comportamiento y vómitos son señales importantes',
+    feedback: '✓ Cambios conductuales marcados y vómitos son alertas importantes',
   },
   {
     question: '¿Qué debe hacerse si el perro come algo potencialmente peligroso?',
-    options: ['Esperar a ver síntomas', 'Hacerle vomitar inmediatamente sin asesoría', 'Llamar al veterinario de inmediato', 'Darle agua caliente'],
+    options: ['Esperar 2-3 horas para ver si vomita solo', 'Darle pan o aceite para "absorber" la toxina', 'Llamar al veterinario inmediatamente antes de actuar', 'Inducir vómito con agua oxigenada sin consultar'],
     correct: 2,
-    feedback: '✓ Contactar al veterinario es la acción segura ante envenenamientos',
+    feedback: '✓ Contactar al vet es crucial; algunas toxinas empeoran con vómito',
   },
   {
     question: '¿Cómo saber si tu perro tiene sobrepeso?',
-    options: ['Porque tiene pelaje abundante', 'No se ven las costillas, abdomen caído', 'Porque come mucho', 'Porque late el corazón rápido'],
+    options: ['Pesa más que el promedio de su raza', 'No se palpan las costillas, abdomen caído, cintura no definida', 'Tiene mucho apetito y pide comida', 'Su pelaje se ve más abundante'],
     correct: 1,
-    feedback: '✓ La dificultad para sentir las costillas es signo de sobrepeso',
+    feedback: '✓ La imposibilidad de palpar costillas y falta de cintura indican sobrepeso',
   },
   {
     question: '¿Qué indica que un gato está en celo?',
-    options: ['Duerme todo el día', 'Maúlla excesivamente, es inquieto, solicita atención', 'No come nada', 'Se vuelve agresivo'],
+    options: ['Pérdida de apetito y letargo constante', 'Mauýlla excesivamente, se frota, posición de apareamiento', 'Agresividad hacia otros gatos', 'Duerme más horas de lo normal'],
     correct: 1,
-    feedback: '✓ Vocalizaciones excesivas e inquietud indican celo en gatos',
+    feedback: '✓ Vocalizaciones, frotamiento y lordosis indican celo en gatas',
   },
   {
     question: '¿Cuándo se debe llevar a un cachorro al veterinario por primera vez?',
-    options: ['Al mes de edad', 'A las 2-4 semanas de vida', 'Al año de edad', 'Nunca, sólo si está enfermo'],
+    options: ['A las 6-8 semanas de vida', 'A las 2-4 semanas de vida o antes si hay problemas', 'A los 3 meses de edad', 'Solo cuando termine de lactar'],
     correct: 1,
-    feedback: '✓ El primer chequeo debe ser entre las 2-4 semanas de vida',
+    feedback: '✓ El primer chequeo debe ser entre 2-4 semanas para valoración inicial',
   },
   {
-    question: '¿Qué alimento humano es seguro para perros?',
-    options: ['Aguacate', 'Manzana sin semillas', 'Uvas', 'Cebolla'],
+    question: '¿Qué alimento humano es seguro para perros en moderación?',
+    options: ['Aguacate en pequeñas cantidades', 'Manzana sin semillas ni centro', 'Uvas pasas como premio', 'Cebolla cocida bien picada'],
     correct: 1,
-    feedback: '✓ Manzanas sin semillas son seguras y saludables para perros',
+    feedback: '✓ Manzanas sin semillas son seguras; aguacate, uvas y cebolla son tóxicos',
   },
   {
     question: '¿Cómo actuar si tu gato se niega a usar la caja de arena?',
-    options: ['Castigarlo', 'Revisar limpieza, ubicación, o problemas de salud', 'Cambiar de casa', 'Regañarlo constantemente'],
+    options: ['Cambiar el tipo de arena inmediatamente', 'Revisar limpieza, ubicación, estrés o problemas urinarios', 'Poner múltiples cajas en la misma habitación', 'Cerrar al gato en el baño con la caja'],
     correct: 1,
-    feedback: '✓ Los gatos evitan cajas sucias o mal ubicadas; revisar salud también',
+    feedback: '✓ Evitar la caja indica suciedad, ubicación, estrés o infección urinaria',
   },
   {
-    question: '¿Qué hacer si tu perro tiene diarrea?',
-    options: ['Darle leche para normalizar', 'Ofrecer pollo cocido y arroz, hidratación', 'Esperar sin hacer nada', 'Alimentarlo más'],
+    question: '¿Qué hacer si tu perro tiene diarrea leve?',
+    options: ['Ayuno de 12 horas y luego dieta blanda', 'Dieta blanda (pollo hervido + arroz) e hidratación', 'Darle yogurt natural para restaurar flora', 'Medicarlo con antidiarreico humano'],
     correct: 1,
-    feedback: '✓ Pollo y arroz son blandos; mantener hidratación es clave',
+    feedback: '✓ Dieta blanda e hidratación; si persiste >24h, consultar vet',
   },
   {
     question: '¿Cuál es la razón de cortarle las uñas a un perro?',
-    options: ['Solo por estética', 'Prevenir dolor, infecciones y caminar correctamente', 'Para castigarlo', 'No es necesario'],
+    options: ['Solo para evitar arañazos en personas', 'Prevenir dolor, deformidades, infecciones y cojera', 'Es puramente estético, opcional', 'Para que no dañe los muebles'],
     correct: 1,
-    feedback: '✓ Uñas largas causan dolor y problemas de movimiento',
+    feedback: '✓ Uñas largas causan dolor al caminar, deformaciones y lesiones',
   },
   {
     question: '¿Cómo saber si tu gato está deshidratado?',
-    options: ['Tiene hambre constante', 'Encías secas, pelaje sin brillo, letargo', 'Duerme en lugares frescos', 'Maúlla más'],
+    options: ['Orina más oscura de lo normal', 'Encías secas, piel poco elástica, letargo y ojos hundidos', 'Bebe agua constantemente todo el día', 'Busca lugares frescos para dormir'],
     correct: 1,
-    feedback: '✓ Encías secas y letargo indican deshidratación en gatos',
+    feedback: '✓ Encías secas, elasticidad reducida y letargo indican deshidratación',
   },
   {
     question: '¿Qué hacer si tu perro tiene una herida sangrante?',
-    options: ['Dejar que sangre para "limpiarla"', 'Presionar con gasa limpia, aplicar desinfectante, ir al vet si es profunda', 'Lamer la herida', 'Ignorarla'],
+    options: ['Aplicar hielo directamente sobre la herida', 'Presión con gasa limpia, lavar con suero, valorar si necesita sutura', 'Dejar que se lama la herida para "limpiarla"', 'Aplicar alcohol o agua oxigenada directamente'],
     correct: 1,
-    feedback: '✓ Presionar y limpiar es lo correcto; heridas profundas necesitan vet',
+    feedback: '✓ Presión, limpieza con suero; heridas profundas requieren vet',
   },
   {
     question: '¿Qué indica que tu gato está estresado o asustado?',
-    options: ['Come mucho', 'Oreja atrás, pupilas dilatadas, cuerpo tenso', 'Juega constantemente', 'Ronronea sin parar'],
+    options: ['Ronroneo suave y ojos semicerrados', 'Orejas hacia atrás, pupilas dilatadas, cola hinchada', 'Amasa con las patas y se frota', 'Juega con sus juguetes favoritos'],
     correct: 1,
-    feedback: '✓ Orejas hacia atrás y pupilas dilatadas son señales de miedo',
+    feedback: '✓ Orejas aplanadas, midriasis y piloerección indican miedo intenso',
   },
   {
-    question: '¿Cómo presentar un nuevo perro a uno existente?',
-    options: ['Enfrentarlos directamente', 'Paseos conjuntos neutrales primero, luego en casa supervisados', 'Separarlos para siempre', 'Mezclarlos en la cama'],
+    question: '¿Cómo presentar un nuevo perro a uno existente en casa?',
+    options: ['Juntarlos directamente en el patio trasero', 'Paseos neutrales juntos, luego introducción gradual supervisada', 'Encerrarlos juntos en una habitación', 'Dejar que se encuentren por primera vez en la comida'],
     correct: 1,
-    feedback: '✓ Presentaciones neutrales y supervisadas evitan conflictos',
+    feedback: '✓ Territorio neutral primero, luego introducción gradual en casa',
   },
   {
-    question: '¿Qué producto es especialmente peligroso para gatos?',
-    options: ['Arena para gatos', 'Antiinflamatorios como paracetamol', 'Rascador', 'Juguetes de goma'],
+    question: '¿Qué medicamento humano es especialmente tóxico para gatos?',
+    options: ['Vitamina C en bajas dosis', 'Paracetamol (acetaminofén) e ibuprofeno', 'Probióticos específicos', 'Suero fisiológico'],
     correct: 1,
-    feedback: '✓ Paracetamol y otros medicamentos humanos son tóxicos para gatos',
+    feedback: '✓ Paracetamol e ibuprofeno pueden ser letales para gatos',
   },
   {
-    question: '¿Cuándo empezar a socializar a un cachorro?',
-    options: ['Al año de edad', 'Entre las 3-12 semanas de vida', 'Nunca es necesario', 'Cuando es adulto'],
+    question: '¿Cuándo es el periodo crítico de socialización en cachorros?',
+    options: ['Entre 1-3 meses de edad', 'Entre 3-14 semanas de vida', 'Entre 6-12 meses de edad', 'Después del año de edad'],
     correct: 1,
-    feedback: '✓ La ventana crítica es entre 3-12 semanas; más tarde es difícil',
+    feedback: '✓ El periodo crítico es 3-14 semanas; exposiciones positivas son clave',
   },
 ]
 
@@ -315,7 +316,7 @@ const gameState = reactive({
 
 // Temporizador
 const timeRemaining = ref(TIMER_DURATION)
-let timerInterval: NodeJS.Timeout | null = null
+let timerInterval: any = null
 
 // Iniciar temporizador
 const startTimer = () => {
@@ -387,7 +388,7 @@ const prepareQuestions = () => {
   const shuffledPool = shuffleArray(questions)
   const selected = shuffledPool.slice(0, Math.min(QUESTIONS_PER_GAME, shuffledPool.length))
   
-  // Generar preguntas con opciones mezcladas
+  // Generar preguntas 
   let qCopy: Array<GameQuestion & { originalQ?: Question }> = selected.map((q: Question) => {
     const optionsWithIndex = q.options.map((opt, idx) => ({ text: opt, idx }))
     const shuffled = shuffleArray(optionsWithIndex)
@@ -405,8 +406,10 @@ const prepareQuestions = () => {
   // Intentar balancear distribución de shuffledCorrect entre 0..3
   const getDistribution = (arr: any[]) => {
     const dist = [0, 0, 0, 0]
-    arr.forEach(q => { 
-      if (typeof q.shuffledCorrect === 'number') dist[q.shuffledCorrect]++ 
+    arr.forEach((q: any) => { 
+      if (q && typeof q.shuffledCorrect === 'number' && q.shuffledCorrect >= 0 && q.shuffledCorrect < 4) {
+        dist[q.shuffledCorrect]++
+      }
     })
     return dist
   }
@@ -425,17 +428,20 @@ const prepareQuestions = () => {
     let changed = false
     
     for (let i = 0; i < qCopy.length; i++) {
-      if (qCopy[i].shuffledCorrect === mostFrequent) {
-        const origQ = qCopy[i].originalQ!
-        const optionsWithIndex = origQ.options.map((opt, idx) => ({ text: opt, idx }))
+      const item = qCopy[i]
+      if (item && item.shuffledCorrect === mostFrequent && item.originalQ) {
+        const origQ = item.originalQ
+        const optionsWithIndex = origQ.options.map((opt: any, idx: any) => ({ text: opt, idx }))
         const shuffled = shuffleArray(optionsWithIndex)
-        const shuffledOptions = shuffled.map(s => s.text)
-        const shuffledCorrect = shuffled.findIndex(s => s.idx === origQ.correct)
+        const shuffledOptions = shuffled.map((s: any) => s.text)
+        const shuffledCorrect = shuffled.findIndex((s: any) => s.idx === origQ.correct)
         
         qCopy[i] = {
-          ...qCopy[i],
+          question: item.question,
           shuffledOptions,
           shuffledCorrect,
+          feedback: item.feedback,
+          originalQ: item.originalQ,
         }
         changed = true
         break
@@ -447,7 +453,7 @@ const prepareQuestions = () => {
     attempts++
   }
   
-  // Eliminar referencia a originalQ antes de guardar
+  // eliminar referencia a originalQ antes de guardar
   const finalQuestions: GameQuestion[] = qCopy.map(({ originalQ, ...rest }) => rest as GameQuestion)
   gameQuestions.value = finalQuestions
 }
@@ -455,13 +461,45 @@ const prepareQuestions = () => {
 // Inicializar preguntas al montar
 prepareQuestions()
 
+// Verificar si hay un estado de juego guardado (después del mini-juego)
+const checkForRestoredGame = () => {
+  const savedState = gameStateService.loadGameState()
+  const miniGameWon = gameStateService.hasMiniGameWon()
+  
+  if (savedState && miniGameWon) {
+    // Restaurar el estado del juego con una vida extra
+    gameQuestions.value = savedState.questions
+    gameState.currentQuestion = savedState.currentQuestion
+    gameState.score = savedState.score
+    gameState.lives = 1 // Vida extra ganada
+    gameState.answered = false // Permitir continuar con la siguiente pregunta
+    gameState.selectedAnswer = -1
+    gameState.gameOver = false
+    gameState.won = false
+    gameState.recordSaved = false
+    
+    // Si ya había respondido la pregunta actual, avanzar a la siguiente
+    if (savedState.answered && gameState.currentQuestion < gameQuestions.value.length - 1) {
+      gameState.currentQuestion += 1
+    }
+    
+    // Limpiar el estado guardado
+    gameStateService.clearGameState()
+  }
+}
+
+// Ejecutar al montar
+onMounted(() => {
+  checkForRestoredGame()
+})
+
 /*
-  question - Computed que devuelve la pregunta actual (mezclada)
+  devuelve la pregunta actual
 */
 const question = computed(() => gameQuestions.value[gameState.currentQuestion])
 
 /*
-  progress - Computed que devuelve el porcentaje de progreso
+ devuelve el porcentaje de progreso
 */
 const progress = computed(() => {
   const total = gameQuestions.value.length || questions.length
@@ -469,10 +507,10 @@ const progress = computed(() => {
 })
 
 /*
-  selectAnswer(index)
-  - Usar shuffledCorrect para comparar
+ 
+  - shuffledCorrect para comparar
 */
-const selectAnswer = (index) => {
+const selectAnswer = (index: number) => {
   if (gameState.answered) return
   // Detener temporizador en cuanto responde el jugador
   stopTimer()
@@ -494,18 +532,23 @@ const nextQuestion = () => {
     gameState.answered = false
     gameState.selectedAnswer = -1
   } else {
-    gameState.won = true
+    // Completaste todas las preguntas
+    if (gameState.lives > 0 && gameState.score >= 70) {
+      // Ganaste si tienes vidas restantes y al menos 70 puntos
+      gameState.won = true
+    }
     gameState.gameOver = true
   }
 }
 
 const checkGameStatus = () => {
   if (gameState.lives <= 0) {
+    gameState.won = false
     gameState.gameOver = true
   }
 }
 
-// Guardar récord del juego en localStorage
+// Guardar récord del juego usando el servicio
 const saveGameRecord = () => {
   if (gameState.recordSaved) return
   const record: GameRecord = {
@@ -513,10 +556,9 @@ const saveGameRecord = () => {
     maxScore: QUESTIONS_PER_GAME * 10,
     date: new Date().toISOString(),
     questionsAnswered: gameState.currentQuestion + (gameState.answered ? 1 : 0),
+    won: gameState.won,
   }
-  const records: GameRecord[] = JSON.parse(localStorage.getItem('gameRecords') || '[]')
-  records.push(record)
-  localStorage.setItem('gameRecords', JSON.stringify(records))
+  gameRecordService.saveRecord(record)
   gameState.recordSaved = true
 }
 
@@ -538,7 +580,21 @@ const goHome = () => {
   router.push('/')
 }
 
-const getOptionClass = (index) => {
+const goToMiniGame = () => {
+  // Guardar el estado actual del juego para poder continuar después
+  const gameStateBackup = {
+    currentQuestion: gameState.currentQuestion,
+    score: gameState.score,
+    lives: 0, // Se restaurará a 1 si gana el mini-juego
+    answered: gameState.answered,
+    selectedAnswer: gameState.selectedAnswer,
+    questions: gameQuestions.value,
+  }
+  gameStateService.saveGameState(gameStateBackup)
+  router.push('/minigame')
+}
+
+const getOptionClass = (index: number) => {
   if (!gameState.answered) return ''
   if (index === question.value.shuffledCorrect) return 'correct'
   if (index === gameState.selectedAnswer && index !== question.value.shuffledCorrect) return 'incorrect'
@@ -560,7 +616,7 @@ watch(
 // Guardar automáticamente el récord la primera vez que termina la partida
 watch(
   () => gameState.gameOver,
-  (newVal) => {
+  (newVal: boolean) => {
     if (newVal === true) {
       stopTimer()
       saveGameRecord()
@@ -621,8 +677,13 @@ onUnmounted(() => {
         <h2>Game Over</h2>
         <p class="score-final">Puntuación: <strong>{{ gameState.score }}/{{ gameQuestions.length * 10 }}</strong></p>
         <p class="defeat-msg">Perdiste todas tus vidas. ¡Inténtalo de nuevo!</p>
+        <div class="minigame-offer">
+          <p class="minigame-text">🎮 ¿Quieres una oportunidad de ganar una vida extra?</p>
+          <p class="minigame-desc">¡Juega nuestro mini-juego y gana una vida para continuar!</p>
+        </div>
         <div class="button-group">
-          <button class="btn btn-primary" @click="restart">🔄 Reintentar</button>
+          <button class="btn btn-minigame" @click="goToMiniGame">🐱 Jugar Mini-Juego</button>
+          <button class="btn btn-primary" @click="restart">🔄 Reintentar desde el Inicio</button>
           <button class="btn btn-secondary" @click="goHome">← Volver al Inicio</button>
         </div>
       </div>
@@ -974,6 +1035,37 @@ onUnmounted(() => {
 
 .defeat {
   color: #ef4444;
+}
+
+.minigame-offer {
+  margin: 20px 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.minigame-text {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.minigame-desc {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.btn-minigame {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  box-shadow: 0 10px 20px rgba(245, 87, 108, 0.3);
+}
+
+.btn-minigame:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(245, 87, 108, 0.4);
 }
 
 @media (max-width: 640px) {

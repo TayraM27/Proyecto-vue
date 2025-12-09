@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import Home from './views/Home.vue'
 import Game from './views/Game.vue'
 import Stats from './views/Stats.vue'
+import MiniGame from './views/MiniGame.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -18,6 +19,11 @@ const routes: RouteRecordRaw[] = [
     path: '/stats',
     name: 'Stats',
     component: Stats,
+  },
+  {
+    path: '/minigame',
+    name: 'MiniGame',
+    component: MiniGame,
   },
 ]
 

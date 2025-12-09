@@ -1,45 +1,36 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import type { GameRecord } from '../models/GameRecord'
+import { GameRecordService } from '../services/GameRecordService'
+import { StorageType } from '../factories/StorageFactory'
 
 const router = useRouter()
 
-// Interfaz para registros de puntuaciones
-interface GameRecord {
-  score: number
-  maxScore: number
-  date: string
-  questionsAnswered: number
-}
+// Instanciar el servicio usando el patrón AbstractFactory
+const gameRecordService = new GameRecordService(StorageType.LOCAL)
 
 const records = ref<GameRecord[]>([])
 const totalGames = ref(0)
 const bestScore = ref(0)
 const averageScore = ref(0)
 
-// Cargar estadísticas desde localStorage
+// Cargar estadísticas usando el servicio
 const loadStats = () => {
   try {
-    const saved = localStorage.getItem('gameRecords')
-    if (saved) {
-      records.value = JSON.parse(saved)
-      totalGames.value = records.value.length
-      
-      if (records.value.length > 0) {
-        bestScore.value = Math.max(...records.value.map(r => r.score))
-        const total = records.value.reduce((sum, r) => sum + r.score, 0)
-        averageScore.value = Math.round(total / records.value.length)
-      }
-    }
+    records.value = gameRecordService.getAllRecords()
+    totalGames.value = gameRecordService.getTotalGames()
+    bestScore.value = gameRecordService.getBestScore()
+    averageScore.value = gameRecordService.getAverageScore()
   } catch (error) {
-    console.error('Error loading stats:', error)
+    console.error('Error cargando estadísticas:', error)
   }
 }
 
-// Limpiar historial
+// Limpiar historial usando el servicio
 const clearStats = () => {
   if (confirm('¿Borrar todo el historial de partidas?')) {
-    localStorage.removeItem('gameRecords')
+    gameRecordService.clearAllRecords()
     records.value = []
     totalGames.value = 0
     bestScore.value = 0
@@ -47,17 +38,9 @@ const clearStats = () => {
   }
 }
 
-// Calcular racha de victorias
+// Calcular racha de victorias usando el servicio
 const winStreak = computed(() => {
-  let streak = 0
-  for (let i = records.value.length - 1; i >= 0; i--) {
-    if (records.value[i].score === records.value[i].maxScore) {
-      streak++
-    } else {
-      break
-    }
-  }
-  return streak
+  return gameRecordService.getWinStreak()
 })
 
 const goHome = () => {
@@ -107,8 +90,6 @@ onMounted(() => {
           <div v-for="(record, idx) in records.slice().reverse()" :key="idx" class="record-item">
             <div class="record-score">
               <span class="score-value">{{ record.score }}/{{ record.maxScore }}</span>
-              <span v-if="record.score === record.maxScore" class="badge-victory">✓ Victoria</span>
-              <span v-else class="badge-loss">✗ Derrota</span>
             </div>
             <div class="record-info">
               <p class="record-date">{{ new Date(record.date).toLocaleDateString('es-ES') }}</p>

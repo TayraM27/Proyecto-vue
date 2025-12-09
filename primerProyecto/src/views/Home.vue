@@ -5,9 +5,9 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 /*
-  hasGame - Computed que verifica si hay una partida guardada
-  - Devuelve true si existe puntuación previa en localStorage
-  - Permite mostrar botón "Continuar" si hay juego anterior
+ verifica si hay una partida guardada
+  Devuelve true si existe puntuación previa en localStorage
+  Muestra btn "Continuar" si hay juego anterior
 */
 const hasGame = computed(() => {
   try {
@@ -19,9 +19,7 @@ const hasGame = computed(() => {
 })
 
 /*
-  startNewGame() - Inicia una nueva trivia
-  - Limpia el guardado anterior
-  - Navega a la página del juego
+ Inicia una nueva trivia
 */
 const startNewGame = () => {
   localStorage.removeItem('trivia-score')
@@ -97,10 +95,10 @@ const clearGame = () => {
         <ul class="info-list">
           <li><strong>10 preguntas</strong> sobre cuidado de mascotas</li>
           <li><strong>4 opciones</strong> por cada pregunta</li>
-          <li><strong>3 vidas:</strong> pierdes 1 por respuesta incorrecta</li>
+          <li><strong>2 vidas:</strong> pierdes 1 por respuesta incorrecta</li>
           <li><strong>10 puntos</strong> por cada respuesta correcta</li>
         </ul>
-        <p class="warning">⚠️ Si pierdes todas las vidas, el juego termina</p>
+        <p class="warning">⚠️ Si pierdes todas las vidas, el juego termina, salvo que se gane en el mini-juego</p>
       </div>
 
       <div class="tips-section">
