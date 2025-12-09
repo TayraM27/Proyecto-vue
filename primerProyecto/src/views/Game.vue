@@ -27,16 +27,7 @@ const gameStateService = new GameStateService(StorageType.LOCAL)
 const router = useRouter()
 const TIMER_DURATION = 12 // segundos por pregunta
 
-/*
-  questions - Array con todas las preguntas de trivia sobre cuidado de mascotas
-  Cada pregunta tiene:
-  - question: el texto de la pregunta
-  - options: array de 4 opciones de respuesta
-  - correct: índice (0-3) de la opción correcta (índice respecto a `options` original)
-  - feedback: mensaje de retroalimentación si se acierta
-  Se mantiene la lista original aquí y se generará una copia mezclada
-  (preguntas y opciones) al iniciar/reiniciar la partida.
-*/
+
 const QUESTIONS_PER_GAME = 10
 
 const questions: Question[] = [
@@ -54,14 +45,14 @@ const questions: Question[] = [
   },
   {
     question: '¿Cada cuánto tiempo se debe bañar a un perro?',
-    options: ['Cada semana sin falta', 'Cada 2-3 semanas', 'Cada 1-2 meses o según necesidad', 'Solo cuando esté muy sucio'],
+    options: ['Cada semana sin falt o según necesidada', 'Cada 2-3 semanas', 'Cada 1-2 meses o según necesidad', 'Solo cuando esté muy sucio'],
     correct: 2,
     feedback: '✓ Bañar muy seguido puede dañar la piel del perro',
   },
   {
     question: '¿Cuál es el mejor tipo de juguete para un gato?',
-    options: ['Pelotas pequeñas de goma', 'Juguetes que imitan presas con movimiento', 'Cuerdas estáticas colgantes', 'Cajas de cartón vacías'],
-    correct: 1,
+    options: ['Pelotas pequeñas de goma', 'Cuerdas estáticas colgantes', 'Cajas de cartón vacías', 'Juguetes que imitan presas con movimiento'],
+    correct: 3,
     feedback: '✓ A los gatos les encanta perseguir cosas que imitan presas',
   },
   {
@@ -72,8 +63,8 @@ const questions: Question[] = [
   },
   {
     question: '¿Cuántas horas duerme un gato al día aproximadamente?',
-    options: ['10-12 horas', '12-14 horas', '14-16 horas', '18-20 horas'],
-    correct: 2,
+    options: ['14-16 horas', '10-12 horas', '12-14 horas', '18-20 horas'],
+    correct: 0,
     feedback: '✓ Los gatos duermen 14-16 horas al día, es completamente normal',
   },
   {
@@ -96,8 +87,8 @@ const questions: Question[] = [
   },
   {
     question: '¿Cuál es la esperanza de vida promedio de un perro?',
-    options: ['8-10 años', '10-13 años', '13-16 años', '16-20 años'],
-    correct: 1,
+    options: ['8-10 años', '13-16 años', '16-20 años', '10-13 años'],
+    correct: 3,
     feedback: '✓ La mayoría de perros viven entre 10-13 años (varía por raza)',
   },
   {
@@ -126,14 +117,14 @@ const questions: Question[] = [
   },
   {
     question: '¿Cada cuánto revisar las orejas de un perro?',
-    options: ['Cada día sin falta', 'Cada 3-4 días', 'Cada semana o cuando notes algo extraño', 'Solo cuando huela mal'],
-    correct: 2,
+    options: ['Cada día sin falta', 'Cada 3-4 días', 'Solo cuando huela mal', 'Cada semana'],
+    correct: 3,
     feedback: '✓ Revisar semanalmente ayuda a detectar infecciones temprano',
   },
   {
     question: '¿Qué tipo de alimento no debe darse a gatos adultos?',
-    options: ['Alimento seco premium para gatos', 'Leche de vaca en grandes cantidades', 'Comida húmeda especial para gatos', 'Leche deslactosada para gatos'],
-    correct: 1,
+    options: ['Alimento seco premium para gatos', 'Comida húmeda especial para gatos', 'Leche deslactosada para gatos', 'Leche de vaca en grandes cantidades'],
+    correct: 3,
     feedback: '✓ La mayoría de gatos adultos son intolerantes a la lactosa',
   },
   {
@@ -144,14 +135,14 @@ const questions: Question[] = [
   },
   {
     question: '¿Cómo saber si un perro necesita agua urgentemente?',
-    options: ['Ladra más de lo normal', 'Encías secas, letargo y elasticidad de piel reducida', 'Come menos de lo habitual', 'Juega más activamente'],
-    correct: 1,
+    options: ['Ladra más de lo normal', 'Juega más activamente', 'Encías secas, letargo y elasticidad de piel reducida', 'Come menos de lo habitual'],
+    correct: 2,
     feedback: '✓ Encías secas y letargo son signos claros de deshidratación',
   },
   {
     question: '¿Qué medida previene pulgas y garrapatas?',
-    options: ['Vacunas', 'Antiparasitarios tópicos u orales', 'Dar más comida', 'Cepillado diario'],
-    correct: 1,
+    options: ['Antiparasitarios tópicos u orales','Vacunas','Dar más comida', 'Cepillado diario'],
+    correct: 0,
     feedback: '✓ Los antiparasitarios son efectivos para prevenir ectoparásitos',
   },
   {
@@ -168,13 +159,13 @@ const questions: Question[] = [
   },
   {
     question: '¿Cómo reducir el riesgo de obesidad en mascotas?',
-    options: ['Reducir solo las raciones de comida', 'Ejercicio regular combinado con dieta controlada', 'Cambiar a alimento light sin modificar porciones', 'Dar más juguetes para entretenimiento'],
-    correct: 1,
+    options: ['Reducir las raciones de comida', 'Cambiar a alimento light sin modificar porciones', 'Dar más juguetes para entretenimiento', 'Ejercicio regular y dieta controlada'],
+    correct: 3,
     feedback: '✓ La combinación de ejercicio y control de raciones es clave',
   },
   {
     question: '¿Qué edad suelen considerar "adulto" a un perro grande?',
-    options: ['9-12 meses', '12-18 meses', '18-24 meses dependiendo de la raza', '24-36 meses'],
+    options: ['9-12 meses', '12-18 meses dependiendo de la raza', '18-24 meses dependiendo de la raza', '24-36 meses dependiendo de la raza'],
     correct: 2,
     feedback: '✓ Razas grandes maduran más despacio, entre 18-24 meses',
   },
@@ -186,32 +177,32 @@ const questions: Question[] = [
   },
   {
     question: '¿Qué hacer si tu gato no come durante 24 horas?',
-    options: ['Esperar 48 horas más antes de preocuparse', 'Ofrecerle comida húmeda más apetitosa', 'Contactar al veterinario para evaluación', 'Cambiar completamente su marca de alimento'],
-    correct: 2,
+    options: ['Contactar al veterinario para evaluación','Esperar 48 horas más antes de preocuparse', 'Ofrecerle comida húmeda más apetitosa', 'Cambiar completamente su marca de alimento'],
+    correct: 0,
     feedback: '✓ Anorexia por 24h en gatos puede ser seria, requiere valoración',
   },
   {
     question: '¿Cuál es la causa común de vómitos en perros?',
-    options: ['Comer pasto del jardín', 'Cambio brusco de alimento o comida en mal estado', 'Hacer ejercicio después de comer', 'Tomar agua fría rápidamente'],
-    correct: 1,
+    options: ['Hacer ejercicio después de comer','Comer pasto del jardín', 'Cambio brusco de alimento',  'Tomar agua fría rápidamente'],
+    correct: 2,
     feedback: '✓ Cambios dietéticos bruscos y comida descompuesta causan vómitos',
   },
   {
     question: '¿Cómo saber si tu gato tiene pulgas?',
-    options: ['Pelaje opaco y seco al tacto', 'Rascado intenso y pequeños puntos negros (heces de pulgas)', 'Aumento de apetito y sed', 'Mauýlla más de lo normal'],
-    correct: 1,
-    feedback: '✓ Prurito intenso y "caspa negra" (heces) son signos de pulgas',
+    options: ['Pelaje opaco y seco al tacto', 'Aumento de apetito y sed', 'Mauýlla más de lo normal', 'Rascado intenso y pequeños puntos negros'],
+    correct: 3,
+    feedback: '✓ Prurito intenso y "caspa negra" (heces de pulgas) son signos de pulgas',
   },
   {
     question: '¿Qué hacer si tu perro mastica sus propias patas?',
-    options: ['Ponerle zapatos o botines protectores', 'Revisar alergias, hongos, heridas o ansiedad', 'Aplicar repelente amargo en las patas', 'Distraerlo con más juguetes'],
-    correct: 1,
+    options: ['Revisar alergias, hongos, heridas o ansiedad','Ponerle zapatos o botines protectores',  'Aplicar repelente amargo en las patas', 'Distraerlo con más juguetes'],
+    correct: 0,
     feedback: '✓ Masticarse las patas indica alergias, dermatitis o estrés',
   },
   {
     question: '¿Cuál es un signo de que tu gato está enfermo?',
-    options: ['Duerme en lugares diferentes de lo habitual', 'Cambios de comportamiento, aislamiento o vómitos frecuentes', 'Mauýlla al ver su comida favorita', 'Juega menos por las tardes'],
-    correct: 1,
+    options: ['Mauýlla al ver su comida favorita','Duerme en lugares diferentes de lo habitual', 'Cambios de comportamiento, aislamiento o vómitos frecuentes',  'Juega menos por las tardes'],
+    correct: 2,
     feedback: '✓ Cambios conductuales marcados y vómitos son alertas importantes',
   },
   {
@@ -222,14 +213,14 @@ const questions: Question[] = [
   },
   {
     question: '¿Cómo saber si tu perro tiene sobrepeso?',
-    options: ['Pesa más que el promedio de su raza', 'No se palpan las costillas, abdomen caído, cintura no definida', 'Tiene mucho apetito y pide comida', 'Su pelaje se ve más abundante'],
-    correct: 1,
+    options: ['Pesa más que el promedio de su raza', , 'Tiene mucho apetito y pide comida', 'Su pelaje se ve más abundante','No se palpan las costillas, abdomen caído, cintura no definida'],
+    correct: 3,
     feedback: '✓ La imposibilidad de palpar costillas y falta de cintura indican sobrepeso',
   },
   {
     question: '¿Qué indica que un gato está en celo?',
-    options: ['Pérdida de apetito y letargo constante', 'Mauýlla excesivamente, se frota, posición de apareamiento', 'Agresividad hacia otros gatos', 'Duerme más horas de lo normal'],
-    correct: 1,
+    options: ['Pérdida de apetito y letargo constante', , 'Agresividad hacia otros gatos', 'Duerme más horas de lo normal','Mauýlla excesivamente, se frota, posición de apareamiento'],
+    correct: 3,
     feedback: '✓ Vocalizaciones, frotamiento y lordosis indican celo en gatas',
   },
   {
@@ -240,8 +231,8 @@ const questions: Question[] = [
   },
   {
     question: '¿Qué alimento humano es seguro para perros en moderación?',
-    options: ['Aguacate en pequeñas cantidades', 'Manzana sin semillas ni centro', 'Uvas pasas como premio', 'Cebolla cocida bien picada'],
-    correct: 1,
+    options: ['Manzana sin semillas ni centro','Aguacate en pequeñas cantidades',  'Uvas pasas como premio', 'Cebolla cocida bien picada'],
+    correct: 0,
     feedback: '✓ Manzanas sin semillas son seguras; aguacate, uvas y cebolla son tóxicos',
   },
   {
@@ -252,14 +243,14 @@ const questions: Question[] = [
   },
   {
     question: '¿Qué hacer si tu perro tiene diarrea leve?',
-    options: ['Ayuno de 12 horas y luego dieta blanda', 'Dieta blanda (pollo hervido + arroz) e hidratación', 'Darle yogurt natural para restaurar flora', 'Medicarlo con antidiarreico humano'],
-    correct: 1,
-    feedback: '✓ Dieta blanda e hidratación; si persiste >24h, consultar vet',
+    options: ['Ayuno de 12 horas y luego dieta blanda', 'Darle yogurt natural e hidratación', 'Medicarlo con antidiarreico humano', 'Dieta blanda  e hidratación'],
+    correct: 3,
+    feedback: '✓ Dieta blanda(pollo hervido + arroz) e hidratación; si persiste >24h consultar a un profesional',
   },
   {
     question: '¿Cuál es la razón de cortarle las uñas a un perro?',
-    options: ['Solo para evitar arañazos en personas', 'Prevenir dolor, deformidades, infecciones y cojera', 'Es puramente estético, opcional', 'Para que no dañe los muebles'],
-    correct: 1,
+    options: ['Prevenir dolor, deformidades, infecciones y cojera','Solo para evitar arañazos en personas',  'Es puramente estético, opcional', 'Para que no dañe los muebles'],
+    correct: 0,
     feedback: '✓ Uñas largas causan dolor al caminar, deformaciones y lesiones',
   },
   {
@@ -276,42 +267,43 @@ const questions: Question[] = [
   },
   {
     question: '¿Qué indica que tu gato está estresado o asustado?',
-    options: ['Ronroneo suave y ojos semicerrados', 'Orejas hacia atrás, pupilas dilatadas, cola hinchada', 'Amasa con las patas y se frota', 'Juega con sus juguetes favoritos'],
-    correct: 1,
+    options: ['Ronroneo suave y ojos semicerrados','Amasa con las patas y se frota', 'Orejas hacia atrás, pupilas dilatadas, cola hinchada',  'Juega con sus juguetes favoritos'],
+    correct: 2,
     feedback: '✓ Orejas aplanadas, midriasis y piloerección indican miedo intenso',
   },
   {
     question: '¿Cómo presentar un nuevo perro a uno existente en casa?',
-    options: ['Juntarlos directamente en el patio trasero', 'Paseos neutrales juntos, luego introducción gradual supervisada', 'Encerrarlos juntos en una habitación', 'Dejar que se encuentren por primera vez en la comida'],
-    correct: 1,
+    options: ['Juntarlos directamente en el patio trasero', 'Dejar que se encuentren por primera vez en la comida','Paseos neutrales juntos, luego introducción gradual supervisada', 'Encerrarlos juntos en una habitación para que se conozcan'],
+    correct: 2,
     feedback: '✓ Territorio neutral primero, luego introducción gradual en casa',
   },
   {
     question: '¿Qué medicamento humano es especialmente tóxico para gatos?',
-    options: ['Vitamina C en bajas dosis', 'Paracetamol (acetaminofén) e ibuprofeno', 'Probióticos específicos', 'Suero fisiológico'],
-    correct: 1,
+    options: ['Paracetamol  e ibuprofeno','Vitamina C en bajas dosis',  'Probióticos específicos', 'Suero fisiológico'],
+    correct: 0,
     feedback: '✓ Paracetamol e ibuprofeno pueden ser letales para gatos',
   },
   {
     question: '¿Cuándo es el periodo crítico de socialización en cachorros?',
-    options: ['Entre 1-3 meses de edad', 'Entre 3-14 semanas de vida', 'Entre 6-12 meses de edad', 'Después del año de edad'],
-    correct: 1,
+    options: ['Entre 3-14 semanas de vida','Entre 1-3 meses de edad',  'Entre 6-12 meses de edad', 'Después del año de edad'],
+    correct: 0,
     feedback: '✓ El periodo crítico es 3-14 semanas; exposiciones positivas son clave',
   },
 ]
 
 /*
-  gameState - Estado reactivo del juego
+  gameState - Estado reactivo del juego 
+  cualquier cambio se reflejará automáticamente en la interfaz
 */
 const gameState = reactive({
-  currentQuestion: 0,
-  score: 0,
-  lives: 3,
-  answered: false,
-  selectedAnswer: -1,
-  gameOver: false,
-  won: false,
-  recordSaved: false,
+  currentQuestion: 0,   // Índice de  pregunta actual
+  score: 0,             // Puntuación 
+  lives: 3,             // Vidas 
+  answered: false,      // Si ya respondió la pregunta actual
+  selectedAnswer: -1,   // Opción seleccionada(-1 = ninguna)
+  gameOver: false,      // Si el juego terminó
+  won: false,           // Si el jugador ganó
+  recordSaved: false,   // Si se guardó el récord/puntuación
 })
 
 // Temporizador
@@ -330,7 +322,7 @@ const startTimer = () => {
     if (timeRemaining.value <= 0) {
       clearInterval(timerInterval!)
       timerInterval = null
-      // Auto-responder: seleccionar respuesta incorrecta (pierde una vida)
+      // seleccionar respuesta incorrecta (pierde una vida)
       gameState.answered = true
       gameState.selectedAnswer = -1
       gameState.lives -= 1
@@ -361,7 +353,7 @@ const timerColor = computed(() => {
 })
 
 /*
-  gameQuestions - Copia mezclada de `questions` que se usa durante la partida
+  copia mezclada de `questions`(se usa durante la partida)
   Cada item tendrá:
   - question: texto
   - shuffledOptions: array de opciones mezcladas
@@ -403,7 +395,7 @@ const prepareQuestions = () => {
     }
   })
   
-  // Intentar balancear distribución de shuffledCorrect entre 0..3
+  //  balancear distribución de shuffledCorrect entre 0..3
   const getDistribution = (arr: any[]) => {
     const dist = [0, 0, 0, 0]
     arr.forEach((q: any) => { 
@@ -458,21 +450,21 @@ const prepareQuestions = () => {
   gameQuestions.value = finalQuestions
 }
 
-// Inicializar preguntas al montar
+// inicializar preguntas 
 prepareQuestions()
 
-// Verificar si hay un estado de juego guardado (después del mini-juego)
+//Verificar si hay un estado de juego guardado (después del mini-juego)
 const checkForRestoredGame = () => {
   const savedState = gameStateService.loadGameState()
   const miniGameWon = gameStateService.hasMiniGameWon()
   
   if (savedState && miniGameWon) {
-    // Restaurar el estado del juego con una vida extra
+    //Restaurar el estado del juego con una vida extra
     gameQuestions.value = savedState.questions
     gameState.currentQuestion = savedState.currentQuestion
     gameState.score = savedState.score
-    gameState.lives = 1 // Vida extra ganada
-    gameState.answered = false // Permitir continuar con la siguiente pregunta
+    gameState.lives = 1 //vida extra 
+    gameState.answered = false //permitir continuar con la siguiente pregunta
     gameState.selectedAnswer = -1
     gameState.gameOver = false
     gameState.won = false
@@ -506,10 +498,7 @@ const progress = computed(() => {
   return Math.round(((gameState.currentQuestion + 1) / total) * 100)
 })
 
-/*
- 
-  - shuffledCorrect para comparar
-*/
+
 const selectAnswer = (index: number) => {
   if (gameState.answered) return
   // Detener temporizador en cuanto responde el jugador

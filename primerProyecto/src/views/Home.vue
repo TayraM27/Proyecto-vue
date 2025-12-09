@@ -6,8 +6,7 @@ const router = useRouter()
 
 /*
  verifica si hay una partida guardada
-  Devuelve true si existe puntuación previa en localStorage
-  Muestra btn "Continuar" si hay juego anterior
+
 */
 const hasGame = computed(() => {
   try {
@@ -19,7 +18,7 @@ const hasGame = computed(() => {
 })
 
 /*
- Inicia una nueva trivia
+ inicia una nueva trivia
 */
 const startNewGame = () => {
   localStorage.removeItem('trivia-score')
@@ -27,17 +26,15 @@ const startNewGame = () => {
 }
 
 /*
-  continueGame() - Continúa con la trivia
-  - Navega al juego manteniendo el progreso
+Continúa con la trivia
 */
 const continueGame = () => {
   router.push('/game')
 }
 
 /*
-  clearGame() - Borra el progreso guardado
-  - Pide confirmación al usuario
-  - Recarga la página
+  borra el progreso guardado
+
 */
 const clearGame = () => {
   if (confirm('¿Borrar la puntuación guardada?')) {
@@ -95,7 +92,7 @@ const clearGame = () => {
         <ul class="info-list">
           <li><strong>10 preguntas</strong> sobre cuidado de mascotas</li>
           <li><strong>4 opciones</strong> por cada pregunta</li>
-          <li><strong>2 vidas:</strong> pierdes 1 por respuesta incorrecta</li>
+          <li><strong>3 vidas:</strong> pierdes 1 por respuesta incorrecta</li>
           <li><strong>10 puntos</strong> por cada respuesta correcta</li>
         </ul>
         <p class="warning">⚠️ Si pierdes todas las vidas, el juego termina, salvo que se gane en el mini-juego</p>

@@ -358,7 +358,7 @@ onUnmounted(() => {
           :style="{ cursor: estadoJuego.estaJugando ? 'pointer' : 'default' }"
         ></canvas>
         
-        <!-- Barra de progreso -->
+        <!--barra de progreso -->
         <div class="progress-bar-container" v-if="estadoJuego.estaJugando">
           <div class="progress-bar">
             <div class="progress-fill" :style="{ width: porcentajeProgreso + '%' }"></div>
@@ -368,7 +368,7 @@ onUnmounted(() => {
           </p>
         </div>
 
-        <!-- Puntuación -->
+        <!--puntuación y distancia-->
         <div class="score-display" v-if="estadoJuego.estaJugando">
           <div>Obstáculos: {{ estadoJuego.puntuacion }}</div>
           <div class="distance-indicator">🏁 {{ distanciaRestante }}m restantes</div>
@@ -391,7 +391,7 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <!-- Pantalla de derrota -->
+      <!--pantalla de derrota -->
       <div v-if="estadoJuego.juegoTerminado && !estadoJuego.gano" class="result-screen defeat">
         <div class="emoji-big">💔</div>
         <h2>¡Fallaste!</h2>
