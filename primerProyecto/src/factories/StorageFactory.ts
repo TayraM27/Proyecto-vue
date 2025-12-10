@@ -8,26 +8,26 @@ export enum StorageType {
   SESSION = 'session'
 }
 
-// Abstract Factory: Fábrica abstracta para crear instancias de almacenamiento
+//fábrica abstracta para crear instancias de almacenamiento
 export abstract class StorageFactory {
   abstract createStorage<T>(): IStorage<T>
 }
 
-// Concrete Factory: Fábrica concreta para LocalStorage
+//   para LocalStorage
 export class LocalStorageFactory extends StorageFactory {
   createStorage<T>(): IStorage<T> {
     return new LocalStorageAdapter<T>()
   }
 }
 
-// Concrete Factory: Fábrica concreta para SessionStorage
+// fábrica concreta para SessionStorage
 export class SessionStorageFactory extends StorageFactory {
   createStorage<T>(): IStorage<T> {
     return new SessionStorageAdapter<T>()
   }
 }
 
-// Función auxiliar para obtener la fábrica apropiada según el tipo
+// Función para obtener la fábrica apropiada según el tipo
 export function getStorageFactory(type: StorageType): StorageFactory {
   switch (type) {
     case StorageType.LOCAL:

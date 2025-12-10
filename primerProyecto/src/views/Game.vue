@@ -45,13 +45,13 @@ const questions: Question[] = [
   },
   {
     question: '¿Cada cuánto tiempo se debe bañar a un perro?',
-    options: ['Cada semana sin falt o según necesidada', 'Cada 2-3 semanas', 'Cada 1-2 meses o según necesidad', 'Solo cuando esté muy sucio'],
+    options: ['Cada semana sin falta', 'Cada 2-3 semanas', 'Cada 1-2 meses o según necesidad', 'Solo cuando esté muy sucio'],
     correct: 2,
     feedback: '✓ Bañar muy seguido puede dañar la piel del perro',
   },
   {
     question: '¿Cuál es el mejor tipo de juguete para un gato?',
-    options: ['Pelotas pequeñas de goma', 'Cuerdas estáticas colgantes', 'Cajas de cartón vacías', 'Juguetes que imitan presas con movimiento'],
+    options: ['Pelotas pequeñas de goma', 'Cuerdas estáticas colgantes', 'Cajas de cartón vacías', 'Juguetes con movimiento'],
     correct: 3,
     feedback: '✓ A los gatos les encanta perseguir cosas que imitan presas',
   },
@@ -213,13 +213,13 @@ const questions: Question[] = [
   },
   {
     question: '¿Cómo saber si tu perro tiene sobrepeso?',
-    options: ['Pesa más que el promedio de su raza', , 'Tiene mucho apetito y pide comida', 'Su pelaje se ve más abundante','No se palpan las costillas, abdomen caído, cintura no definida'],
+    options: ['Pesa más que el promedio de su raza', 'Tiene mucho apetito y pide comida', 'Su pelaje se ve más abundante','No se palpan las costillas, abdomen caído, cintura no definida'],
     correct: 3,
     feedback: '✓ La imposibilidad de palpar costillas y falta de cintura indican sobrepeso',
   },
   {
     question: '¿Qué indica que un gato está en celo?',
-    options: ['Pérdida de apetito y letargo constante', , 'Agresividad hacia otros gatos', 'Duerme más horas de lo normal','Mauýlla excesivamente, se frota, posición de apareamiento'],
+    options: ['Pérdida de apetito y letargo constante', 'Agresividad hacia otros gatos', 'Duerme más horas de lo normal','Mauýlla excesivamente, se frota, posición de apareamiento'],
     correct: 3,
     feedback: '✓ Vocalizaciones, frotamiento y lordosis indican celo en gatas',
   },
@@ -447,7 +447,7 @@ const prepareQuestions = () => {
   gameQuestions.value = finalQuestions
 }
 
-// inicializar preguntas 
+// Inicializar preguntas inmediatamente al cargar
 prepareQuestions()
 
 //Verificar si hay un estado de juego guardado(después de mini-juego)
@@ -474,18 +474,29 @@ const checkForRestoredGame = () => {
     
     // Limpiar el estado guardado
     gameStateService.clearGameState()
+    return true
   }
+  return false
 }
 
 // Ejecutar al montar
 onMounted(() => {
-  checkForRestoredGame()
+  const savedState = gameStateService.loadGameState()
+  const miniGameWon = gameStateService.hasMiniGameWon()
+  
+  // Solo restaurar si viene del mini-juego
+  if (savedState && miniGameWon) {
+    checkForRestoredGame()
+  }
 })
 
 /*
   devuelve la pregunta actual
 */
-const question = computed(() => gameQuestions.value[gameState.currentQuestion])
+const question = computed(() => {
+  if (gameQuestions.value.length === 0) return null
+  return gameQuestions.value[gameState.currentQuestion]
+})
 
 /*
  devuelve el porcentaje de progreso
@@ -518,18 +529,16 @@ const nextQuestion = () => {
     gameState.answered = false
     gameState.selectedAnswer = -1
   } else {
-    // Completaste todas las preguntas
-    if (gameState.lives > 0 && gameState.score >= 70) {
-      // Ganaste si tienes vidas restantes y al menos 70 puntos
-      gameState.won = true
-    }
+    
+    gameState.won = gameState.score >= 70
     gameState.gameOver = true
   }
 }
 
 const checkGameStatus = () => {
   if (gameState.lives <= 0) {
-    gameState.won = false
+    // Si tienes 70+ puntos, ganas aunque se acaben las vidas
+    gameState.won = gameState.score >= 70
     gameState.gameOver = true
   }
 }
@@ -675,7 +684,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Pantalla de juego -->
-      <div v-else class="game-content">
+      <div v-else-if="question" class="game-content">
         <!-- Pregunta -->
         <div class="question-box">
           <p class="question-text">{{ question.question }}</p>
@@ -713,6 +722,11 @@ onUnmounted(() => {
         >
           {{ gameState.currentQuestion === questions.length - 1 ? 'Ver resultado' : 'Siguiente →' }}
         </button>
+      </div>
+
+      <!-- Pantalla de carga -->
+      <div v-else class="loading-screen">
+        <p>Cargando preguntas...</p>
       </div>
     </div>
   </div>

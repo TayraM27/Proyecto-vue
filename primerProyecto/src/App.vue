@@ -1,9 +1,11 @@
-<!-- 
-  App.vue - Componente raíz
-  Solo contiene el router-view que renderiza la página actual
--->
+<script setup lang="ts">
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+</script>
+
 <template>
-  <router-view />
+  <router-view :key="route.fullPath" />
 </template>
 
 <style>

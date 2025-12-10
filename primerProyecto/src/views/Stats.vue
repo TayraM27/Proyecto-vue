@@ -11,20 +11,10 @@ const router = useRouter()
 const gameRecordService = new GameRecordService(StorageType.LOCAL)
 
 const records = ref<GameRecord[]>([])
-const totalGames = ref(0)
-const bestScore = ref(0)
-const averageScore = ref(0)
 
 // Cargar estadísticas usando el servicio
 const loadStats = () => {
-  try {
-    records.value = gameRecordService.getAllRecords()
-    totalGames.value = gameRecordService.getTotalGames()
-    bestScore.value = gameRecordService.getBestScore()
-    averageScore.value = gameRecordService.getAverageScore()
-  } catch (error) {
-    console.error('Error cargando estadísticas:', error)
-  }
+  records.value = gameRecordService.getAllRecords()
 }
 
 // Limpiar historial usando el servicio
@@ -32,15 +22,34 @@ const clearStats = () => {
   if (confirm('¿Borrar todo el historial de partidas?')) {
     gameRecordService.clearAllRecords()
     records.value = []
-    totalGames.value = 0
-    bestScore.value = 0
-    averageScore.value = 0
   }
 }
 
-// Calcular racha de victorias usando el servicio
+// Computed properties que se actualizan reactivamente con records
+const totalGames = computed(() => records.value.length)
+
+const bestScore = computed(() => {
+  if (records.value.length === 0) return 0
+  return Math.max(...records.value.map(r => r.score))
+})
+
+const averageScore = computed(() => {
+  if (records.value.length === 0) return 0
+  const total = records.value.reduce((sum, r) => sum + r.score, 0)
+  return Math.round(total / records.value.length)
+})
+
 const winStreak = computed(() => {
-  return gameRecordService.getWinStreak()
+  let streak = 0
+  for (let i = records.value.length - 1; i >= 0; i--) {
+    const record = records.value[i]
+    if (record && record.won) {
+      streak++
+    } else {
+      break
+    }
+  }
+  return streak
 })
 
 const goHome = () => {

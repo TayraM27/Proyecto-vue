@@ -94,6 +94,7 @@ const clearGame = () => {
           <li><strong>4 opciones</strong> por cada pregunta</li>
           <li><strong>3 vidas:</strong> pierdes 1 por respuesta incorrecta</li>
           <li><strong>10 puntos</strong> por cada respuesta correcta</li>
+          <li><strong>Ganas:</strong> al obtener 70 puntos o más.</li>
         </ul>
         <p class="warning">⚠️ Si pierdes todas las vidas, el juego termina, salvo que se gane en el mini-juego</p>
       </div>

@@ -51,7 +51,7 @@ export class GameRecordService {
     let streak = 0
     for (let i = records.length - 1; i >= 0; i--) {
       const record = records[i]
-      if (record && record.score === record.maxScore) {
+      if (record && record.won) {
         streak++
       } else {
         break
