@@ -354,15 +354,12 @@ const timerColor = computed(() => {
 
 /*
   copia mezclada de `questions`(se usa durante la partida)
-  Cada item tendrá:
-  - question: texto
-  - shuffledOptions: array de opciones mezcladas
-  - shuffledCorrect: índice (0-3) de la opción correcta dentro de shuffledOptions
-  - feedback: texto de retroalimentación
+  shuffledOptions: array de opciones mezcladas
+  shuffledCorrect: índice de la opción correcta dentro de shuffledOptions
 */
 const gameQuestions = ref<GameQuestion[]>([])
 
-// Algoritmo de mezcla Fisher-Yates
+// Algoritmo de mezcla
 const shuffleArray = (arr: any[]): any[] => {
   const a = arr.slice()
   for (let i = a.length - 1; i > 0; i--) {
@@ -374,13 +371,13 @@ const shuffleArray = (arr: any[]): any[] => {
   return a
 }
 
-// Prepara y mezcla preguntas y opciones, balanceando posiciones correctas
+// Prepara y mezcla preguntas y opciones
 const prepareQuestions = () => {
-  // Mezclar el orden de las preguntas y seleccionar un subconjunto
+  //mezclar el orden de las preguntas y seleccionar un subconjunto
   const shuffledPool = shuffleArray(questions)
   const selected = shuffledPool.slice(0, Math.min(QUESTIONS_PER_GAME, shuffledPool.length))
   
-  // Generar preguntas 
+  //generar preguntas 
   let qCopy: Array<GameQuestion & { originalQ?: Question }> = selected.map((q: Question) => {
     const optionsWithIndex = q.options.map((opt, idx) => ({ text: opt, idx }))
     const shuffled = shuffleArray(optionsWithIndex)
@@ -453,7 +450,7 @@ const prepareQuestions = () => {
 // inicializar preguntas 
 prepareQuestions()
 
-//Verificar si hay un estado de juego guardado (después del mini-juego)
+//Verificar si hay un estado de juego guardado(después de mini-juego)
 const checkForRestoredGame = () => {
   const savedState = gameStateService.loadGameState()
   const miniGameWon = gameStateService.hasMiniGameWon()
@@ -470,7 +467,7 @@ const checkForRestoredGame = () => {
     gameState.won = false
     gameState.recordSaved = false
     
-    // Si ya había respondido la pregunta actual, avanzar a la siguiente
+   
     if (savedState.answered && gameState.currentQuestion < gameQuestions.value.length - 1) {
       gameState.currentQuestion += 1
     }
@@ -602,7 +599,7 @@ watch(
   , { immediate: true }
 )
 
-// Guardar automáticamente el récord la primera vez que termina la partida
+// Guardar automáticamente 
 watch(
   () => gameState.gameOver,
   (newVal: boolean) => {
